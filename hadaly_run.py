@@ -51,10 +51,24 @@ def brain(x_train, y_train, x_test, y_test):
     model.fit(x_train, y_train, nb_epoch=5, batch_size=32)
 
     loss_and_metrics = model.evaluate(x_test, y_test, batch_size=32)
+    print("Metrics:")
+    print(loss_and_metrics)
 
     classes = model.predict_classes(x_test, batch_size=32)
     proba = model.predict_proba(x_test, batch_size=32)
 
+def get_x(df_train):
+    #### This appears to be the correct way to combine these. Try this implementation.
+    # Perform an IDF normalization on the output of HashingVectorizer
+    n_gram = (1, 2)
+    hasher = HashingVectorizer(ngram_range=n_gram, stop_words='english', strip_accents="unicode", non_negative=True,
+                               norm=None)
+    vectorizer = make_pipeline(hasher, TfidfTransformer())
+
+    text = df_train['text']
+    x_train = vectorizer.fit_transform(text)
+
+    return x_train
 
 def main():
     LOG_FILENAME = 'logs/gridsearch.log'
@@ -83,19 +97,14 @@ def main():
         df_train, df_test = dataset.ix[train_index], dataset.ix[test_index]
 
         # compute x,y for each matrix.
-        variables_object = VariablesXandY(input_filename=df_train, reindex=True)
-        y_train = variables_object.get_y_matrix(labels_pickle_filename=None)
+        train_vars = VariablesXandY(input_filename=df_train, reindex=True)
+        y_train = train_vars.get_y_matrix()
+        x_train = get_x(df_train)
 
+        test_vars = VariablesXandY(input_filename=df_test, reindex=True)
+        y_test = test_vars.get_y_matrix()
+        x_test = get_x(df_test)
 
-        text = df_train['text']
-
-        #### This appears to be the correct way to combine these. Try this implementation.
-        # Perform an IDF normalization on the output of HashingVectorizer
-        n_gram =(1,2)
-        hasher = HashingVectorizer(ngram_range=n_gram,stop_words='english', strip_accents="unicode", non_negative=True, norm=None)
-        vectorizer = make_pipeline(hasher, TfidfTransformer())
-        x_train = vectorizer.fit_transform(text)
-
-
+        brain(x_train, y_train, x_test, y_test)
 if __name__ == "__main__":
     main()

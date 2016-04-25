@@ -36,16 +36,17 @@ def brain(x_train, y_train, x_test, y_test):
     from keras.layers.core import Dense, Activation
     from keras.optimizers import SGD
 
+    number_of_classes = y_train.shape[1]
     model = Sequential()
 
-    model.add(Dense(output_dim=64, input_dim=100))
+    model.add(Dense(output_dim=64, input_dim=x_train.shape[1]))
     model.add(Activation("relu"))
-    model.add(Dense(output_dim=10))
-    model.add(Activation("softmax"))
+    model.add(Dense(output_dim=number_of_classes))
+    model.add(Activation("sigmoid"))
 
     #model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=SGD(lr=0.01, momentum=0.9, nesterov=True),
+    model.compile(loss='binary_crossentropy',
+                  optimizer='sgd',#SGD(lr=0.01, momentum=0.9, nesterov=True),
                   metrics=['accuracy']
                  )
     model.fit(x_train, y_train, nb_epoch=5, batch_size=32)
